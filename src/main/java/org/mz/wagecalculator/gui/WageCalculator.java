@@ -1,0 +1,795 @@
+package org.mz.wagecalculator.gui;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeEvent;
+import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.regex.Pattern;
+import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.JOptionPane;
+import javax.swing.JSpinner;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import org.apache.log4j.LogManager;
+import org.mz.wagecalculator.service.EmployeeLogDAO;
+import org.mz.wagecalculator.bean.EmployeeDailyLog;
+import org.mz.wagecalculator.bean.Employee;
+import org.mz.wagecalculator.service.EmployeeDAO;
+import org.mz.wagecalculator.service.PDFService;
+
+/**
+ * This is the main Frame which display as Main Page.
+ * @author
+ */
+public final class WageCalculator extends javax.swing.JFrame {
+
+	private static final long serialVersionUID = 974104215270628208L;
+	private static final org.apache.log4j.Logger LOGGER = LogManager.getLogger(WageCalculator.class.getName());
+
+    /**
+     * Creates new form WageCalculator
+     *
+     * @param listEmployee
+     */
+    public WageCalculator(List<Employee> listEmployee) {
+        initComponents();
+        setTimeEditorOnColumns();
+        setEmployees(listEmployee);
+        wagesPerHourCalcField.setText(String.valueOf(((Employee) (employeeComboBox.getSelectedItem())).getWagesPerHour()));
+        List<EmployeeDailyLog> employeeLogs = new EmployeeLogDAO().getEmployeeLogs(((Employee) (employeeComboBox.getSelectedItem())).getEmployeeId(), (monthChooser.getMonth() + 1), yearChooser.getYear());
+        setEmployeeLogs(employeeLogs);
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * This method sets Time Spinner on Columns
+     */
+    private void setTimeEditorOnColumns() {
+        LOGGER.info("Setting Time Editor on Columns.");
+        TableColumn inTime = employeeTable.getColumnModel().getColumn(1);
+        TableColumn outTime = employeeTable.getColumnModel().getColumn(2);
+        inTime.setCellEditor(new TimeEditor(new JFormattedTextField()));
+        outTime.setCellEditor(new TimeEditor(new JFormattedTextField()));
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * This method sets employee details on Drop Down Box
+     *
+     * @param listEmployee
+     */
+    private void setEmployees(List<Employee> listEmployee) {
+        LOGGER.info("Setting Employees in Combo Box.");
+        for (int i = 0; i < listEmployee.size(); i++) {
+            Employee employee = listEmployee.get(i);
+            employeeComboBox.addItem(employee);
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * This method sets employee details on Columns
+     *
+     * @param employeeLogs
+     */
+    private void setEmployeeLogs(List<EmployeeDailyLog> employeeLogs) {
+        LOGGER.info("Setting EmployeeLogs on Table.");
+        Calendar cal = new GregorianCalendar();
+        cal.set(yearChooser.getYear(), monthChooser.getMonth(), 1);
+        int i = 0;
+        int numberOfDays = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+        DefaultTableModel model = (DefaultTableModel) employeeTable.getModel();
+        model.setRowCount(numberOfDays);
+        for (int row = 0; row < numberOfDays; row++) {
+            @SuppressWarnings("deprecation")
+            Date date = new Date(yearChooser.getYear() - 1900, monthChooser.getMonth(), row + 1);
+            employeeTable.setValueAt(date, row, 0);
+            if (!(employeeLogs.isEmpty())) {
+                EmployeeDailyLog employeeDailyLog = employeeLogs.get(i);
+                Date employeeDate = new Date((employeeDailyLog.getDate()).getTime());
+                if (date.equals(employeeDate)) {
+                    employeeTable.setValueAt(employeeDailyLog.getInTime(), row, 1);
+                    employeeTable.setValueAt(employeeDailyLog.getOutTime(), row, 2);
+                    if (i < employeeLogs.size() - 1) {
+                        i++;
+                    }
+
+                } else {
+                    employeeTable.setValueAt(null, row, 1);
+                    employeeTable.setValueAt(null, row, 2);
+                }
+            } else {
+                employeeTable.setValueAt(null, row, 1);
+                employeeTable.setValueAt(null, row, 2);
+            }
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+
+    // <editor-fold default state="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        pdfDestinationChooser = new javax.swing.JFileChooser();
+        calculatorLayeredPane = new javax.swing.JLayeredPane();
+        heading = new javax.swing.JLabel();
+        recordsScrollPane = new javax.swing.JScrollPane();
+        employeeTable = new javax.swing.JTable(){
+  
+			private static final long serialVersionUID = -4005015327801378293L;
+
+			@SuppressWarnings("deprecation")
+			@Override
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component component = super.prepareRenderer(renderer, row, column);
+
+                Date date =(Date)getModel().getValueAt(row,0);
+                if (date.getDay()==0||date.getDay()==6) {
+                    component.setBackground(Color.PINK);
+                }else{
+                    component.setBackground(Color.LIGHT_GRAY);
+                }
+                return component;
+            }
+
+        };
+        monthChooser = new com.toedter.calendar.JMonthChooser();
+        addEmployeeOptionBtn = new javax.swing.JButton();
+        employeeComboLbl = new javax.swing.JLabel();
+        yearChooser = new com.toedter.calendar.JYearChooser();
+        totalHoursLbl = new javax.swing.JLabel();
+        employeeComboBox = new javax.swing.JComboBox<>();
+        wagesPerHourCalcField = new javax.swing.JTextField();
+        totalAmountLbl = new javax.swing.JLabel();
+        totalHoursField = new javax.swing.JTextField();
+        saveButton = new javax.swing.JButton();
+        wagesPerHourCalcLbl = new javax.swing.JLabel();
+        generatePdfBtn = new javax.swing.JButton();
+        totalAmountField = new javax.swing.JTextField();
+        addEmployeeLayeredPane = new javax.swing.JLayeredPane();
+        backBtn = new javax.swing.JButton();
+        employeeIdField = new javax.swing.JTextField();
+        employeeNameField = new javax.swing.JTextField();
+        wagesPerHourField = new javax.swing.JTextField();
+        employeeIdLbl = new javax.swing.JLabel();
+        employeeNameLbl = new javax.swing.JLabel();
+        wagesPerHourLbl = new javax.swing.JLabel();
+        addEmployeeBtn = new javax.swing.JButton();
+        heading1 = new javax.swing.JLabel();
+
+        pdfDestinationChooser.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Wage Calculator v1.0");
+        setBackground(new java.awt.Color(102, 51, 255));
+        setName("wagesFrame"); // NOI18N
+        setResizable(false);
+        getContentPane().setLayout(new java.awt.CardLayout());
+
+        calculatorLayeredPane.setBackground(new java.awt.Color(255, 255, 255));
+        calculatorLayeredPane.setForeground(new java.awt.Color(153, 153, 153));
+        calculatorLayeredPane.setOpaque(true);
+
+        heading.setBackground(new java.awt.Color(255, 255, 255));
+        heading.setFont(new java.awt.Font("Broadway", 0, 48)); // NOI18N
+        heading.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        heading.setText("Wage Calculator");
+        heading.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        heading.setOpaque(true);
+
+        employeeTable.setModel(new javax.swing.table.DefaultTableModel(
+            new String [] {
+                "Date", "In-Time", "Out-Time", "Daily Hours"
+            }, 31
+        ) {
+            
+			private static final long serialVersionUID = 6671103520275528497L;
+			boolean[] canEdit = new boolean [] {
+                false, true, true, false
+            };
+            
+
+            @Override
+            public void setValueAt(Object aValue, int row, int column) {
+                super.setValueAt(aValue, row, column);
+                if (column == 1 || column == 2) {
+                    inTimeOutTimeValueChange(row);
+                }
+
+            }
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 0) {
+                    return Object.class;
+                }
+                if (columnIndex == 1 || columnIndex == 2) {
+                    return JSpinner.class;
+                }
+                return Object.class;
+
+            }
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        employeeTable.setGridColor(new java.awt.Color(255, 255, 255));
+        employeeTable.setRowHeight(25);
+        employeeTable.setSelectionBackground(new java.awt.Color(0, 0, 255));
+        employeeTable.setSelectionForeground(new java.awt.Color(51, 51, 255));
+        employeeTable.getTableHeader().setReorderingAllowed(false);
+        employeeTable.addKeyListener(new java.awt.event.KeyAdapter() {
+        	@Override
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                deleteKeyReleased(evt);
+            }
+        });
+        recordsScrollPane.setViewportView(employeeTable);
+
+        monthChooser.setBackground(new java.awt.Color(102, 102, 102));
+        monthChooser.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        monthChooser.setForeground(new java.awt.Color(255, 51, 51));
+        monthChooser.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        monthChooser.setOpaque(false);
+        monthChooser.addPropertyChangeListener((PropertyChangeEvent evt)->
+                WageCalculator.this.propertyChange());
+
+        addEmployeeOptionBtn.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        addEmployeeOptionBtn.setText("Add  Employee");
+        addEmployeeOptionBtn.addActionListener((ActionEvent evt)->
+                addEmployeeOptionBtnActionPerformed());
+
+        employeeComboLbl.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        employeeComboLbl.setText("Employee :");
+
+        yearChooser.setBackground(new java.awt.Color(102, 102, 102));
+        yearChooser.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        yearChooser.addPropertyChangeListener((PropertyChangeEvent evt)->
+                WageCalculator.this.propertyChange());
+
+        totalHoursLbl.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        totalHoursLbl.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        totalHoursLbl.setText("Total Hours");
+
+        employeeComboBox.addActionListener((ActionEvent evt)-> 
+                WageCalculator.this.propertyChange());
+
+        wagesPerHourCalcField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        wagesPerHourCalcField.addKeyListener(new java.awt.event.KeyAdapter() {
+        	@Override
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                wagesPerHourCalcFieldKeyReleased();
+            }
+        });
+
+        totalAmountLbl.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        totalAmountLbl.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        totalAmountLbl.setText("Total Amount(Rs.)");
+
+        totalHoursField.setEditable(false);
+        totalHoursField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+
+        saveButton.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        saveButton.setText("Save");
+        saveButton.addActionListener((ActionEvent evt)-> 
+                saveButtonActionPerformed());
+
+        wagesPerHourCalcLbl.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        wagesPerHourCalcLbl.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        wagesPerHourCalcLbl.setText("Wages/Hour(Rs.)");
+
+        generatePdfBtn.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        generatePdfBtn.setText("Generate PDF");
+        generatePdfBtn.addActionListener((ActionEvent evt)->
+                generatePdfBtnActionPerformed());
+
+        totalAmountField.setEditable(false);
+        totalAmountField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+
+        calculatorLayeredPane.setLayer(heading, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(recordsScrollPane, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(monthChooser, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(addEmployeeOptionBtn, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(employeeComboLbl, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(yearChooser, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(totalHoursLbl, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(employeeComboBox, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(wagesPerHourCalcField, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(totalAmountLbl, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(totalHoursField, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(saveButton, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(wagesPerHourCalcLbl, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(generatePdfBtn, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        calculatorLayeredPane.setLayer(totalAmountField, javax.swing.JLayeredPane.DEFAULT_LAYER);
+
+        javax.swing.GroupLayout calculatorLayeredPaneLayout = new javax.swing.GroupLayout(calculatorLayeredPane);
+        calculatorLayeredPane.setLayout(calculatorLayeredPaneLayout);
+        calculatorLayeredPaneLayout.setHorizontalGroup(
+            calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(calculatorLayeredPaneLayout.createSequentialGroup()
+                .addGap(24, 24, 24)
+                .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(calculatorLayeredPaneLayout.createSequentialGroup()
+                        .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(heading, javax.swing.GroupLayout.PREFERRED_SIZE, 914, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(recordsScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 914, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(calculatorLayeredPaneLayout.createSequentialGroup()
+                        .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(calculatorLayeredPaneLayout.createSequentialGroup()
+                                .addGap(18, 18, 18)
+                                .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(generatePdfBtn)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(totalHoursField)
+                                    .addComponent(totalHoursLbl, javax.swing.GroupLayout.DEFAULT_SIZE, 106, Short.MAX_VALUE))
+                                .addGap(33, 33, 33)
+                                .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(wagesPerHourCalcLbl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(wagesPerHourCalcField))
+                                .addGap(40, 40, 40)
+                                .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(totalAmountLbl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(totalAmountField)))
+                            .addGroup(calculatorLayeredPaneLayout.createSequentialGroup()
+                                .addGap(15, 15, 15)
+                                .addComponent(employeeComboLbl)
+                                .addGap(18, 18, 18)
+                                .addComponent(employeeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(55, 55, 55)
+                                .addComponent(monthChooser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(49, 49, 49)
+                                .addComponent(yearChooser, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(addEmployeeOptionBtn)))
+                        .addGap(39, 39, 39))))
+        );
+        calculatorLayeredPaneLayout.setVerticalGroup(
+            calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(calculatorLayeredPaneLayout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addComponent(heading, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(12, 12, 12)
+                .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(employeeComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(employeeComboLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(yearChooser, javax.swing.GroupLayout.DEFAULT_SIZE, 26, Short.MAX_VALUE)
+                    .addComponent(monthChooser, javax.swing.GroupLayout.DEFAULT_SIZE, 30, Short.MAX_VALUE)
+                    .addComponent(addEmployeeOptionBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(10, 10, 10)
+                .addComponent(recordsScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(calculatorLayeredPaneLayout.createSequentialGroup()
+                        .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(totalHoursField, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(wagesPerHourCalcField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(totalAmountField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(wagesPerHourCalcLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(totalAmountLbl)
+                            .addComponent(totalHoursLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap())
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, calculatorLayeredPaneLayout.createSequentialGroup()
+                        .addGroup(calculatorLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(saveButton, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(generatePdfBtn))
+                        .addGap(19, 19, 19))))
+        );
+
+        calculatorLayeredPaneLayout.linkSize(javax.swing.SwingConstants.VERTICAL,monthChooser, yearChooser);
+
+        calculatorLayeredPaneLayout.linkSize(javax.swing.SwingConstants.VERTICAL,generatePdfBtn, saveButton, totalAmountLbl);
+
+        getContentPane().add(calculatorLayeredPane, "addEmployeePanel");
+
+        addEmployeeLayeredPane.setBackground(new java.awt.Color(255, 255, 255));
+        addEmployeeLayeredPane.setOpaque(true);
+
+        backBtn.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        backBtn.setText("Back");
+        backBtn.addActionListener((ActionEvent evt)-> 
+                backBtnActionPerformed());
+
+        employeeIdField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+
+        employeeNameField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+
+        wagesPerHourField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+
+        employeeIdLbl.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        employeeIdLbl.setText("Employee ID");
+
+        employeeNameLbl.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        employeeNameLbl.setText("Employee Name");
+
+        wagesPerHourLbl.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        wagesPerHourLbl.setText("Wages/Hour(INR)");
+
+        addEmployeeBtn.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        addEmployeeBtn.setText("Add Employee");
+        addEmployeeBtn.addActionListener((ActionEvent evt)-> 
+                addEmployeeBtnActionPerformed());
+
+        heading1.setBackground(new java.awt.Color(255, 255, 255));
+        heading1.setFont(new java.awt.Font("Broadway", 0, 48)); // NOI18N
+        heading1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        heading1.setText("Wage Calculator");
+        heading1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        heading1.setOpaque(true);
+
+        addEmployeeLayeredPane.setLayer(backBtn, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        addEmployeeLayeredPane.setLayer(employeeIdField, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        addEmployeeLayeredPane.setLayer(employeeNameField, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        addEmployeeLayeredPane.setLayer(wagesPerHourField, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        addEmployeeLayeredPane.setLayer(employeeIdLbl, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        addEmployeeLayeredPane.setLayer(employeeNameLbl, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        addEmployeeLayeredPane.setLayer(wagesPerHourLbl, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        addEmployeeLayeredPane.setLayer(addEmployeeBtn, javax.swing.JLayeredPane.DEFAULT_LAYER);
+        addEmployeeLayeredPane.setLayer(heading1, javax.swing.JLayeredPane.DEFAULT_LAYER);
+
+        javax.swing.GroupLayout addEmployeeLayeredPaneLayout = new javax.swing.GroupLayout(addEmployeeLayeredPane);
+        addEmployeeLayeredPane.setLayout(addEmployeeLayeredPaneLayout);
+        addEmployeeLayeredPaneLayout.setHorizontalGroup(
+            addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(addEmployeeLayeredPaneLayout.createSequentialGroup()
+                .addGroup(addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(addEmployeeLayeredPaneLayout.createSequentialGroup()
+                        .addGap(24, 24, 24)
+                        .addComponent(heading1, javax.swing.GroupLayout.PREFERRED_SIZE, 914, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(addEmployeeLayeredPaneLayout.createSequentialGroup()
+                        .addGap(350, 350, 350)
+                        .addGroup(addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(addEmployeeBtn)
+                            .addComponent(employeeIdLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(employeeNameLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(wagesPerHourLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addComponent(employeeIdField, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(employeeNameField, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(wagesPerHourField, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(backBtn, javax.swing.GroupLayout.Alignment.TRAILING))))
+                .addContainerGap(24, Short.MAX_VALUE))
+        );
+        addEmployeeLayeredPaneLayout.setVerticalGroup(
+            addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(addEmployeeLayeredPaneLayout.createSequentialGroup()
+                .addComponent(heading1, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(179, 179, 179)
+                .addGroup(addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(addEmployeeLayeredPaneLayout.createSequentialGroup()
+                        .addGap(1, 1, 1)
+                        .addComponent(employeeIdLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(employeeIdField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(employeeNameLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(employeeNameField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(wagesPerHourField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(wagesPerHourLbl, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(addEmployeeLayeredPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(backBtn)
+                    .addComponent(addEmployeeBtn))
+                .addGap(251, 251, 251))
+        );
+
+        getContentPane().add(addEmployeeLayeredPane, "card3");
+
+        pack();
+        setLocationRelativeTo(null);
+    }// </editor-fold>//GEN-END:initComponents
+    /**
+     * This method is called when we change property like month or year.
+     *
+     * @param null
+     */
+    private void propertyChange() {
+        LOGGER.info("Combo box Property Changed: Month/Year");
+        if (employeeComboBox.getSelectedItem() == null) {
+            return;
+        }
+        List<EmployeeDailyLog> employeeLogs = new EmployeeLogDAO().getEmployeeLogs(((Employee) (employeeComboBox.getSelectedItem())).getEmployeeId(), (monthChooser.getMonth() + 1), yearChooser.getYear());
+        setEmployeeLogs(employeeLogs);
+        wagesPerHourCalcField.setText(String.valueOf(((Employee) (employeeComboBox.getSelectedItem())).getWagesPerHour()));
+    }
+
+    /**
+     * This method is called when click on AddEmployee Button to go to
+     * AddEmployeePanel.
+     *
+     * @param null
+     */
+    private void addEmployeeOptionBtnActionPerformed() {//GEN-FIRST:event_addEmployeeOptionBtnActionPerformed
+        LOGGER.info("Add Emolyee Btn Clicked: Opening Add Employee Panel");
+        calculatorLayeredPane.setVisible(false);
+        addEmployeeLayeredPane.setVisible(true);
+    }//GEN-LAST:event_addEmployeeOptionBtnActionPerformed
+    /**
+     * This method is called when click on Generate Pdf Button . It generate Pdf
+     * on specific location where you want.
+     *
+     * @param null
+     */
+    private void generatePdfBtnActionPerformed() {//GEN-FIRST:event_generatePdfBtnActionPerformed
+        LOGGER.info("GeneratePdf Button Clicked");
+        if (pdfDestinationChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File destinationFolder = pdfDestinationChooser.getSelectedFile();
+            ArrayList<EmployeeDailyLog> logsList = new ArrayList<>();
+            for (int i = 0; i < employeeTable.getRowCount(); i++) {
+                EmployeeDailyLog employeeLog = new EmployeeDailyLog();
+                employeeLog.setDate((Date) employeeTable.getValueAt(i, 0));
+                employeeLog.setInTime((String) employeeTable.getValueAt(i, 1));
+                employeeLog.setOutTime((String) employeeTable.getValueAt(i, 2));
+                employeeLog.setEmployeeId(((Employee) employeeComboBox.getSelectedItem()).getEmployeeId());
+                logsList.add(employeeLog);
+            }
+            int generatePDF = new PDFService().generatePDF((Employee) employeeComboBox.getSelectedItem(), logsList, destinationFolder);
+            if (generatePDF > 0) {
+                JOptionPane.showMessageDialog(rootPane, "PDF GENERATED");
+            }
+        }
+
+    }//GEN-LAST:event_generatePdfBtnActionPerformed
+    /**
+     * This method is called when click on save Button . This method save the
+     * new entry If we change old entry it updates
+     *
+     * @param null
+     */
+    private void saveButtonActionPerformed() {//GEN-FIRST:event_saveButtonActionPerformed
+        LOGGER.info("Save Button Clicked");
+        int rowCount = employeeTable.getRowCount();
+        //getting old record employeeLogs for updating and compare. 
+        ArrayList<EmployeeDailyLog> currentEmployeeLogs = new ArrayList<>();
+        for (int i = 0; i < rowCount; i++) {
+            if (employeeTable.getValueAt(i, 1) != null || employeeTable.getValueAt(i, 2) != null) {
+                EmployeeDailyLog employeeLog = new EmployeeDailyLog();
+                employeeLog.setDate((Date) employeeTable.getValueAt(i, 0));
+                employeeLog.setInTime((String) employeeTable.getValueAt(i, 1));
+                employeeLog.setOutTime((String) employeeTable.getValueAt(i, 2));
+                employeeLog.setEmployeeId(((Employee) employeeComboBox.getSelectedItem()).getEmployeeId());
+                currentEmployeeLogs.add(employeeLog);
+            }
+        }
+        //check for updation
+        List<EmployeeDailyLog> previousEmployeeLogs = new EmployeeLogDAO().getEmployeeLogs(((Employee) (employeeComboBox.getSelectedItem())).getEmployeeId(), (monthChooser.getMonth() + 1), yearChooser.getYear());
+        ArrayList<EmployeeDailyLog> listUpdateDailyLog = new ArrayList<>();
+        for (int i = 0; i < previousEmployeeLogs.size(); i++) {
+            EmployeeDailyLog previousEmployeeDailyLog = previousEmployeeLogs.get(i);
+            for (int j = 0; j < currentEmployeeLogs.size(); j++) {
+                EmployeeDailyLog currentEmployeeDailyLog = currentEmployeeLogs.get(j);
+                if (previousEmployeeDailyLog.getDate().equals(currentEmployeeDailyLog.getDate())) {
+                    listUpdateDailyLog.add(currentEmployeeLogs.get(j));
+                    currentEmployeeLogs.remove(j);
+                    break;
+                }
+            }
+        }
+        EmployeeLogDAO employeeLogDao = new EmployeeLogDAO();
+        int saveResult = employeeLogDao.saveEmployeeDetail(currentEmployeeLogs);
+        int updateResult = employeeLogDao.updateEmployeeDetail(listUpdateDailyLog);
+        if (saveResult > 0 || updateResult > 0) {
+            JOptionPane.showMessageDialog(rootPane, "DATA SAVED");
+        }
+    }//GEN-LAST:event_saveButtonActionPerformed
+    /**
+     * This method is called when we clicked Back button. This method takes you
+     * to the main page
+     */
+    private void backBtnActionPerformed() {//GEN-FIRST:event_backBtnActionPerformed
+        LOGGER.info("Back Button Clicked: Opening Logs Panel");
+        calculatorLayeredPane.setVisible(true);
+        addEmployeeLayeredPane.setVisible(false);
+    }//GEN-LAST:event_backBtnActionPerformed
+    /**
+     * This method is called when click on AddEmployeeButton.
+     * It takes the employee id,name and wages per hour.
+     *
+     * @param null
+     */
+    private void addEmployeeBtnActionPerformed() {//GEN-FIRST:event_addEmployeeBtnActionPerformed
+        LOGGER.info("Add Employee Button Clicked: Add Employee Panel");
+        if (!validateEmployeeData()) {
+            JOptionPane.showMessageDialog(rootPane, "Please Enter Valid Data!", "Empty Fields", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        Employee employee = new Employee();
+        employee.setEmployeeId(employeeIdField.getText());
+        employee.setEmployeeName(employeeNameField.getText());
+        employee.setWagesPerHour(Double.parseDouble(wagesPerHourField.getText()));
+        EmployeeDAO employeeService = new EmployeeDAO();
+        int result = employeeService.addEmployee(employee);
+        if (result == 0) {
+            JOptionPane.showMessageDialog(null, "Unsucessful!!!");
+        } else {
+            setAddEmployeeFormEmpty();
+            JOptionPane.showMessageDialog(null, "Sucessfully Added!!!");
+        }
+
+    }//GEN-LAST:event_addEmployeeBtnActionPerformed
+    /**
+     * This method is called when we change wages in wage field.
+     */
+    private void wagesPerHourCalcFieldKeyReleased() {//GEN-FIRST:event_wagesPerHourCalcFieldKeyReleased
+        LOGGER.info("Wages Per Hour Value Changed");
+        updateTotalAmountField();
+    }//GEN-LAST:event_wagesPerHourCalcFieldKeyReleased
+    /**
+     * This method is called when we want to delete a specific row.
+     *
+     * @param evt
+     */
+    private void deleteKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_deleteKeyReleased
+
+        if (evt.getKeyCode() == KeyEvent.VK_DELETE) {
+            LOGGER.info("Delete button clicked on Logs Table Record");
+            if (JOptionPane.showConfirmDialog(rootPane, "DO YOU WANT TO DELETE???") == 0) {
+                int deletingRow = employeeTable.getSelectedRow();
+                int deleteResult = new EmployeeLogDAO().deleteEmployeeLog(((Employee) employeeComboBox.getSelectedItem()).getEmployeeId(), (Date) employeeTable.getValueAt(deletingRow, 0));
+                if (deleteResult > 0) {
+                    employeeTable.setValueAt(null, deletingRow, 1);
+                    employeeTable.setValueAt(null, deletingRow, 2);
+                    JOptionPane.showMessageDialog(rootPane, "DATA DELETED!!!");
+                }
+            }
+        }
+    }//GEN-LAST:event_deleteKeyReleased
+
+    /**
+     * This method is being called from custom code in setValue
+     *
+     * @param row
+     */
+    private void inTimeOutTimeValueChange(int row) {
+        LOGGER.info("inTimeOutTimeValueChange");
+        updateDailyHoursColumn(row);
+        updateTotalHoursField();
+        updateTotalAmountField();
+    }
+
+    /**
+     * This method is being called for update Daily Hours
+     *
+     * @param row
+     */
+    private void updateDailyHoursColumn(int row) {
+        String inHourMin = (String) employeeTable.getValueAt(row, 1);
+        String outHourMin = (String) employeeTable.getValueAt(row, 2);
+        if (inHourMin == null || outHourMin == null) {
+            employeeTable.setValueAt(null, row, 3);
+            return;
+        }
+        SimpleDateFormat formatter = new SimpleDateFormat("hh:mm");
+        Date inHour = null;
+        Date outHour = null;
+        try {
+            inHour = formatter.parse(inHourMin);
+            outHour = formatter.parse(outHourMin);
+            double minDifference = ((outHour.getTime() - inHour.getTime()) / 60000.00);
+            minDifference = minDifference < 0 ? -minDifference : minDifference;
+            formatter = new SimpleDateFormat("mm");
+            Date dt = formatter.parse(Double.toString(minDifference));
+            formatter = new SimpleDateFormat("HH:mm");
+            String date = formatter.format(dt);
+            employeeTable.setValueAt(date, row, 3);
+             LOGGER.info("Daily Hours Column Updated");
+        } catch (ParseException ex) {
+            LOGGER.error(ex.getMessage(), ex);
+        }
+
+    }
+
+    /**
+     * This method is called when there is change in daily hours row. This
+     * method update Total Hours Field
+     */
+    private void updateTotalHoursField() {
+        int rowCount = employeeTable.getRowCount();
+        double duration = 0;
+        for (int i = 0; i < rowCount - 1; i++) {
+            if (employeeTable.getValueAt(i, 3) != null) {
+                String[] tokens = ((String) employeeTable.getValueAt(i, 3)).split(":");
+                double hours = Double.parseDouble(tokens[0]);
+                double minutes = Double.parseDouble(tokens[1]);
+                duration += hours + (minutes / 60);
+            }
+        }
+        totalHoursField.setText(String.format("%.2f", duration));
+         LOGGER.info("Total Hours Field Updated");
+    }
+
+    /**
+     * This Method is called when there is change in either TotalHoursField or
+     * WagesPerHourField. It updates the total amount field
+     */
+    private void updateTotalAmountField() {
+        if (!wagesPerHourCalcField.getText().isEmpty()) {
+            double totalAmount = Double.parseDouble(totalHoursField.getText()) * Double.parseDouble(wagesPerHourCalcField.getText());
+            totalAmountField.setText(String.format("%.2f", totalAmount));
+        }
+         LOGGER.info("Total Amount Field Updated");
+    }
+
+    /**
+     * This method is called when we addEmployees. It clear the field after
+     * adding it
+     */
+    private void setAddEmployeeFormEmpty() {
+        employeeIdField.setText("");
+        employeeNameField.setText("");
+        wagesPerHourField.setText("");
+         LOGGER.info("Add Employee Form set Empty");
+    }
+
+    /**
+     *
+     * @return
+     */
+    private boolean validateEmployeeData() {
+         LOGGER.info("Validating Employee Data");
+        if (employeeIdField == null || employeeNameField == null || wagesPerHourField == null) {
+            return false;
+        } else if (!(Pattern.matches("^[a-zA-Z]+$", employeeNameField.getText()))) {
+            return false;
+        } else if (!(Pattern.matches("\\d+", wagesPerHourField.getText()))) {
+            return false;
+        }
+        return true;
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton addEmployeeBtn;
+    private javax.swing.JLayeredPane addEmployeeLayeredPane;
+    private javax.swing.JButton addEmployeeOptionBtn;
+    private javax.swing.JButton backBtn;
+    private javax.swing.JLayeredPane calculatorLayeredPane;
+    private javax.swing.JComboBox<Employee> employeeComboBox;
+    private javax.swing.JLabel employeeComboLbl;
+    private javax.swing.JTextField employeeIdField;
+    private javax.swing.JLabel employeeIdLbl;
+    private javax.swing.JTextField employeeNameField;
+    private javax.swing.JLabel employeeNameLbl;
+    private javax.swing.JTable employeeTable;
+    private javax.swing.JButton generatePdfBtn;
+    private javax.swing.JLabel heading;
+    private javax.swing.JLabel heading1;
+    private com.toedter.calendar.JMonthChooser monthChooser;
+    private javax.swing.JFileChooser pdfDestinationChooser;
+    private javax.swing.JScrollPane recordsScrollPane;
+    private javax.swing.JButton saveButton;
+    private javax.swing.JTextField totalAmountField;
+    private javax.swing.JLabel totalAmountLbl;
+    private javax.swing.JTextField totalHoursField;
+    private javax.swing.JLabel totalHoursLbl;
+    private javax.swing.JTextField wagesPerHourCalcField;
+    private javax.swing.JLabel wagesPerHourCalcLbl;
+    private javax.swing.JTextField wagesPerHourField;
+    private javax.swing.JLabel wagesPerHourLbl;
+    private com.toedter.calendar.JYearChooser yearChooser;
+    // End of variables declaration//GEN-END:variables
+
+}
