@@ -19,7 +19,7 @@ public class App {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() ->{ 
         new WageCalculator(new EmployeeDAO().getEmployees()).setVisible(true);
-        LOGGER.info("Application Starting...");
+        LOGGER.info("Application Started");
         });
                 
     }
